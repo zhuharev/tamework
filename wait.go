@@ -7,23 +7,23 @@ import (
 
 type Waiter struct {
 	mu sync.RWMutex
-	m  map[int64]chan string
+	m  map[int64]chan Update
 
 	waitTimeout time.Duration
 }
 
 func NewWaiter(waitTimeout time.Duration) *Waiter {
 	return &Waiter{
-		m:           make(map[int64]chan string),
+		m:           make(map[int64]chan Update),
 		waitTimeout: waitTimeout,
 	}
 }
 
-func (w *Waiter) NeedNext(chatID int64, text string) bool {
+func (w *Waiter) NeedNext(chatID int64, update Update) bool {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if ch, ok := w.m[chatID]; ok {
-		ch <- text
+		ch <- update
 		delete(w.m, chatID)
 		return false
 	}
@@ -31,18 +31,26 @@ func (w *Waiter) NeedNext(chatID int64, text string) bool {
 }
 
 // TODO: wait document photo video audio etcs
-func (w *Waiter) Wait(chatID int64) (string, bool) {
+func (w *Waiter) Wait(chatID int64, stopWord string, durations ...time.Duration) (Update, bool) {
 	w.mu.Lock()
-	w.m[chatID] = make(chan string, 1)
+	w.m[chatID] = make(chan Update, 1)
 	w.mu.Unlock()
 
+	waitTimeout := w.waitTimeout
+	if len(durations) > 0 {
+		waitTimeout = durations[0]
+	}
+
 	select {
-	case <-time.After(w.waitTimeout):
+	case <-time.After(waitTimeout):
 		w.mu.Lock()
 		delete(w.m, chatID)
 		w.mu.Unlock()
-		return "", false
-	case text := <-w.m[chatID]:
-		return text, true
+		return Update{}, false
+	case u := <-w.m[chatID]:
+		if u.Text() != "" && u.Text() == stopWord {
+			return Update{}, false
+		}
+		return u, true
 	}
 }
