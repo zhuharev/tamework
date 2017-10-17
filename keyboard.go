@@ -43,9 +43,10 @@ func (k *Keyboard) SetType(typ KeyboardType) {
 	k.typ = typ
 }
 
-func (k *Keyboard) Remove() {
+func (k *Keyboard) Remove() *Keyboard {
 	k.enabled = true
 	k.remove = true
+	return k
 }
 
 func (k *Keyboard) Reset() *Keyboard {
@@ -54,26 +55,54 @@ func (k *Keyboard) Reset() *Keyboard {
 	return k
 }
 
+func (k *Keyboard) AddURLButton(text, uri string) *Keyboard {
+	return k.addInlineButton(text, uri, "url")
+}
+
 func (k *Keyboard) AddCallbackButton(text string, datas ...string) *Keyboard {
-
-	k.enabled = true
-
 	data := text
-	if len(datas) == 1 {
+	if len(datas) > 0 {
 		data = datas[0]
 	}
+	return k.addInlineButton(text, data, "cb")
+}
+
+func (k *Keyboard) addInlineButton(text, data, typ string) *Keyboard {
+	k.enabled = true
 	k.typ = KeyboardInline
+
+	// for pointer
+	datacopy := data
+
+	var button = tgbotapi.InlineKeyboardButton{
+		Text: text,
+	}
+	if typ == "cb" {
+		button.CallbackData = &datacopy
+	} else if typ == "url" {
+		button.URL = &datacopy
+	}
+
 	if k.values == nil {
 		k.values = tgbotapi.InlineKeyboardMarkup{
 			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 				[]tgbotapi.InlineKeyboardButton{
-					tgbotapi.InlineKeyboardButton{
-						Text:         text,
-						CallbackData: &data,
-					},
+					button,
 				},
 			},
 		}
+	} else {
+		kb, ok := k.values.(tgbotapi.InlineKeyboardMarkup)
+		if !ok {
+			return k
+		}
+		if text == "" {
+			kb.InlineKeyboard = append(kb.InlineKeyboard, []tgbotapi.InlineKeyboardButton{})
+		} else {
+			kb.InlineKeyboard[len(kb.InlineKeyboard)-1] = append(kb.InlineKeyboard[len(kb.InlineKeyboard)-1],
+				button)
+		}
+		k.values = kb
 	}
 	return k
 }
@@ -101,9 +130,13 @@ func (k *Keyboard) AddReplyButton(text string) *Keyboard {
 				// it not possible
 				return k
 			}
-			kb.Keyboard[rows-1] = append(kb.Keyboard[rows-1], tgbotapi.KeyboardButton{
-				Text: text,
-			})
+			if text == "" {
+				kb.Keyboard = append(kb.Keyboard, []tgbotapi.KeyboardButton{})
+			} else {
+				kb.Keyboard[rows-1] = append(kb.Keyboard[rows-1], tgbotapi.KeyboardButton{
+					Text: text,
+				})
+			}
 			k.values = kb
 		}
 	}
@@ -168,4 +201,14 @@ func (k *Keyboard) Markup() interface{} {
 	}
 
 	return nil
+}
+
+func (k *Keyboard) InlineKeyboardMarkup() tgbotapi.InlineKeyboardMarkup {
+	if k.Markup() == nil {
+		return tgbotapi.InlineKeyboardMarkup{}
+	}
+	if markup, ok := k.Markup().(tgbotapi.InlineKeyboardMarkup); ok {
+		return markup
+	}
+	return tgbotapi.InlineKeyboardMarkup{}
 }

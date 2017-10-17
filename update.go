@@ -30,6 +30,22 @@ func (u Update) ChatID() int64 {
 
 }
 
+func (u Update) UserID() int64 {
+	if u.Message != nil {
+		return int64(u.Message.From.ID)
+	} else if u.CallbackQuery != nil {
+		return int64(u.CallbackQuery.From.ID)
+	} else if u.ShippingQuery != nil {
+		return int64(u.ShippingQuery.From.ID)
+	} else if u.PreCheckoutQuery != nil {
+		return int64(u.PreCheckoutQuery.From.ID)
+	} else if u.InlineQuery != nil {
+		return int64(u.InlineQuery.From.ID)
+	}
+	return 0
+
+}
+
 // if update.Message != nil {
 //   c.UserID = int64(update.Message.From.ID)
 //   c.ChatID = update.Message.Chat.ID
@@ -70,6 +86,8 @@ func (u Update) Method() string {
 		//c.Text == ?
 	} else if u.PreCheckoutQuery != nil {
 		return PreCheckoutQuery
+	} else if u.InlineQuery != nil {
+		return InlineQuery
 	}
 
 	return ""
@@ -85,6 +103,8 @@ func (u Update) Text() string {
 		//c.Text == ?
 	} else if u.PreCheckoutQuery != nil {
 		return ""
+	} else if u.InlineQuery != nil {
+		return u.InlineQuery.Query
 	}
 	return ""
 }

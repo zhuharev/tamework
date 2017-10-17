@@ -30,7 +30,6 @@ func (w *Waiter) NeedNext(chatID int64, update Update) bool {
 	return true
 }
 
-// TODO: wait document photo video audio etcs
 func (w *Waiter) Wait(chatID int64, stopWord string, durations ...time.Duration) (Update, bool) {
 	w.mu.Lock()
 	w.m[chatID] = make(chan Update, 1)
@@ -49,8 +48,17 @@ func (w *Waiter) Wait(chatID int64, stopWord string, durations ...time.Duration)
 		return Update{}, false
 	case u := <-w.m[chatID]:
 		if u.Text() != "" && u.Text() == stopWord {
-			return Update{}, false
+			return u, false
 		}
 		return u, true
+	}
+}
+
+func Waiterer() Handler {
+	return func(c *Context) {
+		if !c.tamework.waiter.NeedNext(c.ChatID, c.update) {
+			c.exited = true
+			return
+		}
 	}
 }
