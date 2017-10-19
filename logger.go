@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Logger used for middleware
 func Logger() Handler {
 	return func(c *Context) {
 		started := time.Now()

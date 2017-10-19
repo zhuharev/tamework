@@ -5,16 +5,23 @@ import (
 )
 
 var (
+	// DefaultKeyboardRowLen represend max row len
+	// if buttons count > DefaultKeyboardRowLen,
+	// new rows will be created automaticaly
 	DefaultKeyboardRowLen = 3
 )
 
+// KeyboardType represend type of keyboard
 type KeyboardType string
 
 const (
+	// KeyboardInline inline kb
 	KeyboardInline KeyboardType = "inline"
-	KeyboardReply               = "reply"
+	// KeyboardReply reply kb
+	KeyboardReply = "reply"
 )
 
+// Keyboard helper for play with keyboards
 type Keyboard struct {
 	rowLen         int
 	values         interface{}
@@ -25,6 +32,7 @@ type Keyboard struct {
 	enabled bool
 }
 
+// NewKeyboard returns new Keyboard
 func NewKeyboard(values interface{}) *Keyboard {
 	enabled := false
 	if values != nil {
@@ -33,32 +41,38 @@ func NewKeyboard(values interface{}) *Keyboard {
 	return &Keyboard{values: values, rowLen: DefaultKeyboardRowLen, typ: KeyboardReply, enabled: enabled}
 }
 
+// SetRowLen set max row length
 func (k *Keyboard) SetRowLen(l int) {
 	k.enabled = true
 	k.rowLen = l
 }
 
+// SetType set one of two types
 func (k *Keyboard) SetType(typ KeyboardType) {
 	k.enabled = true
 	k.typ = typ
 }
 
+// Remove indicate that you need to delete keyboard
 func (k *Keyboard) Remove() *Keyboard {
 	k.enabled = true
 	k.remove = true
 	return k
 }
 
+// Reset the keyboard
 func (k *Keyboard) Reset() *Keyboard {
 	k.values = nil
 	k.enabled = false
 	return k
 }
 
+// AddURLButton add inline button
 func (k *Keyboard) AddURLButton(text, uri string) *Keyboard {
 	return k.addInlineButton(text, uri, "url")
 }
 
+// AddCallbackButton add inline buton
 func (k *Keyboard) AddCallbackButton(text string, datas ...string) *Keyboard {
 	data := text
 	if len(datas) > 0 {
@@ -67,6 +81,7 @@ func (k *Keyboard) AddCallbackButton(text string, datas ...string) *Keyboard {
 	return k.addInlineButton(text, data, "cb")
 }
 
+// addInlineButton just helper
 func (k *Keyboard) addInlineButton(text, data, typ string) *Keyboard {
 	k.enabled = true
 	k.typ = KeyboardInline
@@ -86,7 +101,7 @@ func (k *Keyboard) addInlineButton(text, data, typ string) *Keyboard {
 	if k.values == nil {
 		k.values = tgbotapi.InlineKeyboardMarkup{
 			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-				[]tgbotapi.InlineKeyboardButton{
+				{
 					button,
 				},
 			},
@@ -107,6 +122,7 @@ func (k *Keyboard) addInlineButton(text, data, typ string) *Keyboard {
 	return k
 }
 
+// AddReplyButton add an reply button
 func (k *Keyboard) AddReplyButton(text string) *Keyboard {
 
 	k.enabled = true
@@ -115,8 +131,8 @@ func (k *Keyboard) AddReplyButton(text string) *Keyboard {
 	if k.values == nil {
 		k.values = tgbotapi.ReplyKeyboardMarkup{
 			Keyboard: [][]tgbotapi.KeyboardButton{
-				[]tgbotapi.KeyboardButton{
-					tgbotapi.KeyboardButton{
+				{
+					{
 						Text: text,
 					},
 				},
@@ -143,6 +159,7 @@ func (k *Keyboard) AddReplyButton(text string) *Keyboard {
 	return k
 }
 
+// Markup return interface for which can be used in tgbotapi.Message.Markup
 func (k *Keyboard) Markup() interface{} {
 
 	if k.remove {
@@ -160,7 +177,7 @@ func (k *Keyboard) Markup() interface{} {
 		return v
 	case []string:
 		if k.typ == KeyboardReply {
-			keyboard := [][]tgbotapi.KeyboardButton{[]tgbotapi.KeyboardButton{}}
+			keyboard := [][]tgbotapi.KeyboardButton{{}}
 			curRow := 0
 			for _, button := range v {
 				if len(keyboard[curRow]) == k.rowLen || button == "" {
@@ -177,7 +194,7 @@ func (k *Keyboard) Markup() interface{} {
 			}
 		}
 		keyboard := tgbotapi.InlineKeyboardMarkup{
-			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{[]tgbotapi.InlineKeyboardButton{}},
+			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{{}},
 		}
 		curRow := 0
 		for _, button := range v {
@@ -194,7 +211,7 @@ func (k *Keyboard) Markup() interface{} {
 		return keyboard
 	case string:
 		return tgbotapi.ReplyKeyboardMarkup{
-			Keyboard:       [][]tgbotapi.KeyboardButton{[]tgbotapi.KeyboardButton{tgbotapi.KeyboardButton{Text: v}}},
+			Keyboard:       [][]tgbotapi.KeyboardButton{{{Text: v}}},
 			ResizeKeyboard: true,
 		}
 
@@ -203,6 +220,7 @@ func (k *Keyboard) Markup() interface{} {
 	return nil
 }
 
+// InlineKeyboardMarkup returns keyboard typed tgbotapi.InlineKeyboardMarkup
 func (k *Keyboard) InlineKeyboardMarkup() tgbotapi.InlineKeyboardMarkup {
 	if k.Markup() == nil {
 		return tgbotapi.InlineKeyboardMarkup{}

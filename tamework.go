@@ -34,11 +34,13 @@ type Tamework struct {
 	Locales []func(translationID string, args ...interface{}) string
 }
 
+// Use registre middleware
+// This func will be used in each request
 func (tw *Tamework) Use(handler Handler) {
 	tw.handlers = append(tw.handlers, handler)
 }
 
-// New return
+// New returns Tamework instance
 func New(accessToken string) (_ *Tamework, err error) {
 	bot, err := tgbotapi.NewBotAPI(accessToken)
 	if err != nil {
@@ -55,10 +57,13 @@ func New(accessToken string) (_ *Tamework, err error) {
 	return tw, nil
 }
 
+// Bot returns *tgbotapi.BotAPI
 func (tw *Tamework) Bot() *tgbotapi.BotAPI {
 	return tw.bot
 }
 
+// Run starts the pooler and send new updates
+// to router
 func (tw *Tamework) Run() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -73,6 +78,7 @@ func (tw *Tamework) Run() {
 	}
 }
 
+// HandleUpdateWebhook implements http.Handler
 func (tw *Tamework) HandleUpdateWebhook(w http.ResponseWriter, req *http.Request) {
 	if req.Body != nil {
 		defer req.Body.Close()
@@ -99,7 +105,6 @@ func (tw *Tamework) handleUpdate(update tgbotapi.Update) {
 		return
 	}
 
-	//ctx := tw.createContext(update, tw)
 	if tw.AutoTyping {
 		ca := tgbotapi.NewChatAction(up.ChatID(), tgbotapi.ChatTyping)
 		_, err := tw.bot.Send(ca)
@@ -108,19 +113,15 @@ func (tw *Tamework) handleUpdate(update tgbotapi.Update) {
 		}
 	}
 
-	// if !tw.waiter.NeedNext(ctx.ChatID,
-	// 	ctx.update) {
-	// 	return
-	// }
-	//color.Cyan("%s (%s) %d", ctx.Method, ctx.Text, ctx.ChatID)
-
 	tw.Handle(update)
 }
 
+// RegistreMethod registre an alias for method
 func (tw *Tamework) RegistreMethod(method string, buttonCaption string) {
 	tw.methods[buttonCaption] = method
 }
 
+// Resolve resolve method name for passed alias
 func (tw *Tamework) Resolve(text string) (method string, has bool) {
 	method, has = tw.methods[text]
 	if !has {

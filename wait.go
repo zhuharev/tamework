@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Waiter used for wait user inputs
 type Waiter struct {
 	mu sync.RWMutex
 	m  map[int64]chan Update
@@ -12,6 +13,7 @@ type Waiter struct {
 	waitTimeout time.Duration
 }
 
+// NewWaiter returns Waiter
 func NewWaiter(waitTimeout time.Duration) *Waiter {
 	return &Waiter{
 		m:           make(map[int64]chan Update),
@@ -19,6 +21,7 @@ func NewWaiter(waitTimeout time.Duration) *Waiter {
 	}
 }
 
+// NeedNext check is Waiter waiting for input
 func (w *Waiter) NeedNext(chatID int64, update Update) bool {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -30,6 +33,7 @@ func (w *Waiter) NeedNext(chatID int64, update Update) bool {
 	return true
 }
 
+// Wait block the input and redirect one update to Waiter
 func (w *Waiter) Wait(chatID int64, stopWord string, durations ...time.Duration) (Update, bool) {
 	w.mu.Lock()
 	w.m[chatID] = make(chan Update, 1)
@@ -54,6 +58,7 @@ func (w *Waiter) Wait(chatID int64, stopWord string, durations ...time.Duration)
 	}
 }
 
+// Waiterer middleware for *Tamework
 func Waiterer() Handler {
 	return func(c *Context) {
 		if !c.tamework.waiter.NeedNext(c.ChatID, c.update) {

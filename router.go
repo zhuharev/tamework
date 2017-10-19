@@ -8,17 +8,26 @@ import (
 )
 
 var (
-	Message          = "message"
-	CallbackQuery    = "callback_query"
-	Reply            = "reply"
-	ShippingQuery    = "shipping_query"
+	// Message normal message update
+	Message = "message"
+	// CallbackQuery cbquery update
+	CallbackQuery = "callback_query"
+	// Reply reply to message update
+	Reply = "reply"
+	// ShippingQuery update
+	ShippingQuery = "shipping_query"
+	// PreCheckoutQuery update
 	PreCheckoutQuery = "pre_checkout_query"
-	Photo            = "photo"
-	InlineQuery      = "inline_query"
+	// Photo update
+	Photo = "photo"
+	// InlineQuery update
+	InlineQuery = "inline_query"
 
+	// Prefix update
 	Prefix = "prefix"
 )
 
+// Router route messages by text contents
 type Router struct {
 	routeTable map[string]map[string]Handler
 	tamework   *Tamework
@@ -26,6 +35,7 @@ type Router struct {
 	aliases map[string]string
 }
 
+// NewRouter returns new *Router instance
 func NewRouter(tamework *Tamework) *Router {
 	return &Router{
 		tamework:   tamework,
@@ -34,34 +44,44 @@ func NewRouter(tamework *Tamework) *Router {
 	}
 }
 
+// HandleFunc type for handlers
 type HandleFunc func(c *Context)
 
+// CallbackQuery registre handler for CallbackQuery which have pattern as text
 func (r *Router) CallbackQuery(pattern string, fn Handler) {
 	r.registre(CallbackQuery, pattern, fn)
 }
 
+// InlineQuery registre handler for InlineQuery which have pattern as text
 func (r *Router) InlineQuery(fn Handler) {
 	r.registre(InlineQuery, "", fn)
 }
 
+// ShippingQuery registre handler for ShippingQuery which have pattern as text
 func (r *Router) ShippingQuery(pattern string, fn Handler) {
 	r.registre(ShippingQuery, pattern, fn)
 }
 
+// PreCheckoutQuery registre handler for PreCheckoutQuery which have pattern as text
 func (r *Router) PreCheckoutQuery(pattern string, fn Handler) {
 	r.registre(PreCheckoutQuery, pattern, fn)
 }
 
+// Text registre handler for Text which have pattern as text
 func (r *Router) Text(pattern string, fn Handler) {
 	r.registre(Message, pattern, fn)
 }
 
+// Reply registre handler for Reply which have pattern as text
 func (r *Router) Reply(pattern string, fn Handler) {
 	r.registre(Reply, pattern, fn)
 }
 
-func (r *Router) Prefix(pattern string, fn Handler) {
-	r.registre(Prefix, pattern, fn)
+// Prefix registre handler in router. Router will be check all messages - if
+// any message will contain a prefix, prefix will be deleted from message text
+// and handler will process this update
+func (r *Router) Prefix(pattern string, handler Handler) {
+	r.registre(Prefix, pattern, handler)
 }
 
 func (r *Router) registre(method string, pattern string, fn Handler) {
@@ -77,6 +97,7 @@ func (r *Router) registre(method string, pattern string, fn Handler) {
 	}
 }
 
+// Handle is main router func which handle all updates
 func (r *Router) Handle(update tgbotapi.Update) {
 
 	var (

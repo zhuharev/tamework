@@ -3,11 +3,11 @@ package tamework
 import (
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/go-macaron/inject"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
+// Context will be created for all requests
 type Context struct {
 	inject.Injector
 
@@ -37,14 +37,17 @@ type Context struct {
 	T func(translationID string, args ...interface{}) string
 }
 
+// Update reuturns update
 func (c Context) Update() Update {
 	return c.update
 }
 
+// Exit shows that the request is processed and next handlers will not be called
 func (c *Context) Exit() {
 	c.exited = true
 }
 
+// createContextjust create context
 func (tw *Tamework) createContext(update tgbotapi.Update) *Context {
 	c := &Context{
 		Injector: inject.New(),
@@ -70,26 +73,32 @@ func (tw *Tamework) createContext(update tgbotapi.Update) *Context {
 	return c
 }
 
+// Send send text
 func (c *Context) Send(text string) (msg tgbotapi.Message, err error) {
 	return c.send(text, "")
 }
 
+// HTML send html
 func (c *Context) HTML(html string) (msg tgbotapi.Message, err error) {
 	return c.send(html, tgbotapi.ModeHTML)
 }
 
+// Markdown send markdown
 func (c *Context) Markdown(md string) (msg tgbotapi.Message, err error) {
 	return c.send(md, tgbotapi.ModeMarkdown)
 }
 
+// send is just helper
 func (c *Context) send(text string, mode string) (msg tgbotapi.Message, err error) {
 	return c.sendTo(c.ChatID, text, mode)
 }
 
+// SendTo send message to specific chat
 func (c *Context) SendTo(id int64, text string) (msg tgbotapi.Message, err error) {
 	return c.sendTo(id, text, "")
 }
 
+// sendTo just helper
 func (c *Context) sendTo(id int64, text string, mode string) (msg tgbotapi.Message, err error) {
 	kbmsg := tgbotapi.NewMessage(id, text)
 	if c.Keyboard != nil {
@@ -105,30 +114,30 @@ func (c *Context) sendTo(id int64, text string, mode string) (msg tgbotapi.Messa
 	return
 }
 
+// TODO: implement this
+// SendInvoice send new invoice
 func (c *Context) SendInvoice() error {
-	color.Green("New invoice for %d", c.ChatID)
-	invoice := tgbotapi.NewInvoice(c.ChatID, "New invoice", "description here", "lalka",
-		"361519591:TEST:68ca07b04a6cb4f8c7b68b78dbfd5c0a", "12345", "RUB",
-		&[]tgbotapi.LabeledPrice{{Label: "RUB", Amount: 10000}})
-	resp, err := c.tamework.bot.Send(invoice)
-	color.Green("%s", resp)
-	return err
+	return nil
 }
 
-func (c *Context) SendShippingAnswer() error {
-	sc := tgbotapi.ShippingConfig{
-		ShippingQueryID: c.update.ShippingQuery.ID,
-		OK:              true,
-		ShippingOptions: &[]tgbotapi.ShippingOption{{
-			ID:     "allo1",
-			Title:  "nogami",
-			Prices: &[]tgbotapi.LabeledPrice{{Label: "r", Amount: 60}},
-		}},
-	}
-	_, err := c.tamework.bot.AnswerShippingQuery(sc)
-	return err
+// TODO:implement this
+// SendShippingAnswer send shipping query answer
+func (c *Context) SendShippingAnswer() (err error) {
+	// sc := tgbotapi.ShippingConfig{
+	// 	ShippingQueryID: c.update.ShippingQuery.ID,
+	// 	OK:              true,
+	// 	ShippingOptions: &[]tgbotapi.ShippingOption{{
+	// 		ID:     "allo1",
+	// 		Title:  "nogami",
+	// 		Prices: &[]tgbotapi.LabeledPrice{{Label: "r", Amount: 60}},
+	// 	}},
+	// }
+	// _, err := c.tamework.bot.AnswerShippingQuery(sc)
+	// return err
+	return
 }
 
+// AnswerTo answer for callback query
 func (c *Context) AnswerTo(to string, text string, alerts ...bool) error {
 	alert := false
 	if len(alerts) > 0 {
@@ -141,10 +150,12 @@ func (c *Context) AnswerTo(to string, text string, alerts ...bool) error {
 	return err
 }
 
+// Answer answer for context.Update()
 func (c *Context) Answer(text string, alerts ...bool) error {
 	return c.AnswerTo(c.update.CallbackQuery.ID, text, alerts...)
 }
 
+// AnswerInline answer for inline query
 func (c *Context) AnswerInline() error {
 	if c.update.Update.InlineQuery == nil {
 		return nil
@@ -159,6 +170,8 @@ func (c *Context) AnswerInline() error {
 	return err
 }
 
+// SendPrecheckoutAnswer send PreCheckoutQueryanswer
+// it always sends true
 func (c *Context) SendPrecheckoutAnswer() error {
 	pca := tgbotapi.PreCheckoutConfig{
 		OK:                 true,
@@ -168,14 +181,17 @@ func (c *Context) SendPrecheckoutAnswer() error {
 	return err
 }
 
+// EditText edit text for message from context.Update
 func (c *Context) EditText(newMessage string) error {
 	return c.newEdit(newMessage, "")
 }
 
+// EditMarkdown edit text for message from context.Update
 func (c *Context) EditMarkdown(newMessage string) error {
 	return c.newEdit(newMessage, tgbotapi.ModeMarkdown)
 }
 
+// newEdit just helper
 func (c *Context) newEdit(message string, parseMode string) error {
 	cnf := tgbotapi.NewEditMessageText(c.ChatID, c.update.CallbackQuery.Message.MessageID, message)
 	if parseMode != "" {
@@ -188,12 +204,14 @@ func (c *Context) newEdit(message string, parseMode string) error {
 	return err
 }
 
+// EditCaption for file
 func (c *Context) EditCaption(newCaption string) error {
 	cnf := tgbotapi.NewEditMessageCaption(c.ChatID, c.update.CallbackQuery.Message.MessageID, newCaption)
 	_, err := c.tamework.bot.Send(cnf)
 	return err
 }
 
+// EditReplyMurkup edit keyboard
 func (c *Context) EditReplyMurkup(kb *Keyboard) error {
 	var iface interface{}
 	if kb != nil {
@@ -204,24 +222,26 @@ func (c *Context) EditReplyMurkup(kb *Keyboard) error {
 			c.update.CallbackQuery.Message.MessageID, rkb)
 		_, err := c.tamework.bot.Send(cnf)
 		return err
-	} else {
-		cnf := tgbotapi.NewEditMessageReplyMarkup(c.ChatID,
-			c.update.CallbackQuery.Message.MessageID, tgbotapi.InlineKeyboardMarkup{})
-		_, err := c.tamework.bot.Send(cnf)
-		return err
 	}
-	return nil
+	cnf := tgbotapi.NewEditMessageReplyMarkup(c.ChatID,
+		c.update.CallbackQuery.Message.MessageID, tgbotapi.InlineKeyboardMarkup{})
+	_, err := c.tamework.bot.Send(cnf)
+	return err
 }
 
+// Wait input from user
+// if messge text will be contains stopword, waiter will be canceled
 func (c *Context) Wait(stopword string, durations ...time.Duration) (Update, bool) {
 	return c.waiter.Wait(c.ChatID, stopword, durations...)
 }
 
+// NewKeyboard helper for creating keyboard
 func (c *Context) NewKeyboard(values interface{}) *Keyboard {
 	c.Keyboard = NewKeyboard(values)
 	return c.Keyboard
 }
 
+// BotAPI returns tgbotapi.BotAPI instance
 func (c *Context) BotAPI() *tgbotapi.BotAPI {
 	return c.tamework.bot
 }
@@ -236,6 +256,7 @@ func (c *Context) handler() Handler {
 	panic("invalid index for context handler")
 }
 
+// Next call next handler
 func (c *Context) Next() {
 	c.index++
 	c.run()

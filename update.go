@@ -4,10 +4,13 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
+// Update warap tgbotapi.Update and provide
+// several helpers
 type Update struct {
 	tgbotapi.Update
 }
 
+// NewUpdate returns Update by tgbotapi.Update
 func NewUpdate(tupdate tgbotapi.Update) Update {
 	update := Update{
 		Update: tupdate,
@@ -16,6 +19,7 @@ func NewUpdate(tupdate tgbotapi.Update) Update {
 	return update
 }
 
+// ChatID detect update type and return ChatID
 func (u Update) ChatID() int64 {
 	if u.Message != nil {
 		return u.Message.Chat.ID
@@ -30,6 +34,7 @@ func (u Update) ChatID() int64 {
 
 }
 
+// UserID detect update type and return UserID
 func (u Update) UserID() int64 {
 	if u.Message != nil {
 		return int64(u.Message.From.ID)
@@ -46,30 +51,7 @@ func (u Update) UserID() int64 {
 
 }
 
-// if update.Message != nil {
-//   c.UserID = int64(update.Message.From.ID)
-//   c.ChatID = update.Message.Chat.ID
-//   c.Method = Message
-//   if update.Message.ReplyToMessage != nil {
-//     c.Method = Reply
-//   }
-//   c.Text = update.Message.Text
-// } else if update.CallbackQuery != nil {
-//   c.UserID = int64(update.CallbackQuery.Message.From.ID)
-//   c.ChatID = update.CallbackQuery.Message.Chat.ID
-//   c.Method = CallbackQuery
-//   c.Text = update.CallbackQuery.Data
-// } else if update.ShippingQuery != nil {
-//   c.UserID = int64(update.ShippingQuery.From.ID)
-//   c.ChatID = c.UserID
-//   c.Method = ShippingQuery
-//   //c.Text == ?
-// } else if update.PreCheckoutQuery != nil {
-//   c.UserID = int64(update.PreCheckoutQuery.From.ID)
-//   c.ChatID = c.UserID
-//   c.Method = PreCheckoutQuery
-// }
-
+// Method detects update type and return it
 func (u Update) Method() string {
 	if u.Message != nil {
 		if u.Message.ReplyToMessage != nil {
@@ -93,6 +75,7 @@ func (u Update) Method() string {
 	return ""
 }
 
+// Text returns text of message
 func (u Update) Text() string {
 	if u.Message != nil {
 		return u.Message.Text
@@ -109,6 +92,7 @@ func (u Update) Text() string {
 	return ""
 }
 
+// Username returns sender username
 func (u Update) Username() string {
 	if u.Message != nil {
 		return u.Message.Chat.UserName
@@ -122,6 +106,7 @@ func (u Update) Username() string {
 	return ""
 }
 
+// FirstName returns sender first name
 func (u Update) FirstName() string {
 	if u.Message != nil {
 		return u.Message.Chat.FirstName
@@ -135,6 +120,7 @@ func (u Update) FirstName() string {
 	return ""
 }
 
+// LastName returns sender last name
 func (u Update) LastName() string {
 	if u.Message != nil {
 		return u.Message.Chat.LastName
