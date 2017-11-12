@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	// DefaultWaitTimeout how long we wait for user input
 	DefaultWaitTimeout = time.Second * 60
 )
 
@@ -46,6 +47,7 @@ func New(accessToken string) (_ *Tamework, err error) {
 	if err != nil {
 		return
 	}
+
 	tw := &Tamework{
 		bot:        bot,
 		methods:    make(map[string]string),
