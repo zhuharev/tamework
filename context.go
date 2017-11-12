@@ -211,8 +211,8 @@ func (c *Context) EditCaption(newCaption string) error {
 	return err
 }
 
-// EditReplyMurkup edit keyboard
-func (c *Context) EditReplyMurkup(kb *Keyboard) error {
+// EditReplyMarkup edit keyboard
+func (c *Context) EditReplyMarkup(kb *Keyboard) error {
 	var iface interface{}
 	if kb != nil {
 		iface = kb.Markup()
