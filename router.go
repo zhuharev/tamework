@@ -52,6 +52,11 @@ func (r *Router) CallbackQuery(pattern string, fn Handler) {
 	r.registre(CallbackQuery, pattern, fn)
 }
 
+// Cb is alias for CallbackQuery
+func (r *Router) Cb(pattern string, fn Handler) {
+	r.registre(CallbackQuery, pattern, fn)
+}
+
 // InlineQuery registre handler for InlineQuery which have pattern as text
 func (r *Router) InlineQuery(fn Handler) {
 	r.registre(InlineQuery, "", fn)
