@@ -1,6 +1,8 @@
 package tamework
 
 import (
+	"strconv"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -93,17 +95,22 @@ func (u Update) Text() string {
 }
 
 // Username returns sender username
-func (u Update) Username() string {
+func (u Update) Username() (res string) {
 	if u.Message != nil {
-		return u.Message.Chat.UserName
+		res = u.Message.From.UserName
 	} else if u.CallbackQuery != nil {
-		return u.CallbackQuery.From.UserName
+		res = u.CallbackQuery.From.UserName
 	} else if u.ShippingQuery != nil {
-		return u.ShippingQuery.From.UserName
+		res = u.ShippingQuery.From.UserName
 	} else if u.PreCheckoutQuery != nil {
-		return u.PreCheckoutQuery.From.UserName
+		res = u.PreCheckoutQuery.From.UserName
 	}
-	return ""
+
+	if res == "" {
+		return "_" + strconv.Itoa(int(u.UserID()))
+	}
+
+	return
 }
 
 // FirstName returns sender first name
