@@ -35,6 +35,21 @@ type Tamework struct {
 	Locales []func(translationID string, args ...interface{}) string
 }
 
+// Send sends message to id
+func (tw *Tamework) Send(id int64, text string, modes ...string) error {
+	mode := ""
+	if len(modes) > 0 {
+		mode = modes[0]
+	}
+	kbmsg := tgbotapi.NewMessage(id, text)
+	kbmsg.ParseMode = mode
+	_, err := tw.bot.Send(kbmsg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Use registre middleware
 // This func will be used in each request
 func (tw *Tamework) Use(handler Handler) {
