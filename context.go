@@ -98,6 +98,11 @@ func (c *Context) SendTo(id int64, text string) (msg tgbotapi.Message, err error
 	return c.sendTo(id, text, "")
 }
 
+// MarkdownTo send message to specific chat
+func (c *Context) MarkdownTo(id int64, text string) (msg tgbotapi.Message, err error) {
+	return c.sendTo(id, text, tgbotapi.ModeMarkdown)
+}
+
 // sendTo just helper
 func (c *Context) sendTo(id int64, text string, mode string) (msg tgbotapi.Message, err error) {
 	kbmsg := tgbotapi.NewMessage(id, text)
