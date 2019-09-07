@@ -12,6 +12,53 @@ type Update struct {
 	tgbotapi.Update
 }
 
+type UpdateType int
+
+const (
+	UpdateTypeMessage UpdateType = iota + 1
+	UpdateTypeEditedMessage
+	UpdateTypeChannelPost
+	UpdateTypeEditedChannelPost
+	UpdateTypeInlineQuery
+	UpdateTypeChosenInlineResult
+	UpdateTypeCallbackQuery
+	UpdateShippingQuery
+	UpdatePreCheckoutQuery
+	UpdatePoll
+)
+
+func (u Update) Type() UpdateType {
+	if u.Update.Message != nil {
+		return UpdateTypeMessage
+	}
+	if u.Update.EditedMessage != nil {
+		return UpdateTypeMessage
+	}
+	if u.Update.ChannelPost != nil {
+		return UpdateTypeChannelPost
+	}
+	if u.Update.EditedChannelPost != nil {
+		return UpdateTypeEditedChannelPost
+	}
+	if u.Update.InlineQuery != nil {
+		return UpdateTypeInlineQuery
+	}
+	if u.Update.ChosenInlineResult != nil {
+		return UpdateTypeChosenInlineResult
+	}
+	if u.Update.CallbackQuery != nil {
+		return UpdateTypeCallbackQuery
+	}
+	if u.Update.ShippingQuery != nil {
+		return UpdateShippingQuery
+	}
+	if u.Update.PreCheckoutQuery != nil {
+		return UpdatePreCheckoutQuery
+	}
+	//TOOD: add poll
+	return 0
+}
+
 // NewUpdate returns Update by tgbotapi.Update
 func NewUpdate(tupdate tgbotapi.Update) Update {
 	update := Update{
