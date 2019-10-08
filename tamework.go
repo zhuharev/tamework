@@ -35,14 +35,36 @@ type Tamework struct {
 	Locales []func(translationID string, args ...interface{}) string
 }
 
-// Send sends message to id
-func (tw *Tamework) Send(id int64, text string, modes ...string) error {
-	mode := ""
-	if len(modes) > 0 {
-		mode = modes[0]
+// MsgOp args func for flexible change message structure
+type MsgOp func(m *tgbotapi.MessageConfig)
+
+// ToChat set target receipent for message
+func ToChat(id int) MsgOp {
+	return func(m *tgbotapi.MessageConfig) {
+		m.BaseChat.ChatID = int64(id)
 	}
-	kbmsg := tgbotapi.NewMessage(id, text)
-	kbmsg.ParseMode = mode
+}
+
+// WithKeyboard add keyboard markup to message
+func WithKeyboard(kb *Keyboard) MsgOp {
+	return func(m *tgbotapi.MessageConfig) {
+		m.ReplyMarkup = kb.Markup()
+	}
+}
+
+// Markdown tell telegram servers parse message text as markdown
+func Markdown() MsgOp {
+	return func(m *tgbotapi.MessageConfig) {
+		m.ParseMode = tgbotapi.ModeMarkdown
+	}
+}
+
+// Send sends message to id
+func (tw *Tamework) Send(text string, fns ...MsgOp) error {
+	kbmsg := tgbotapi.NewMessage(0, text)
+	for _, fn := range fns {
+		fn(&kbmsg)
+	}
 	_, err := tw.bot.Send(kbmsg)
 	if err != nil {
 		return err
