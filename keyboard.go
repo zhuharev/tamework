@@ -67,6 +67,10 @@ func (k *Keyboard) Reset() *Keyboard {
 	return k
 }
 
+func (k *Keyboard) AddContactButton(text string) *Keyboard {
+	return k.addReplyButton(text, true)
+}
+
 // AddURLButton add inline button
 func (k *Keyboard) AddURLButton(text, uri string) *Keyboard {
 	return k.addInlineButton(text, uri, "url")
@@ -122,8 +126,12 @@ func (k *Keyboard) addInlineButton(text, data, typ string) *Keyboard {
 	return k
 }
 
-// AddReplyButton add an reply button
 func (k *Keyboard) AddReplyButton(text string) *Keyboard {
+	return k.addReplyButton(text, false)
+}
+
+// addReplyButton add an reply button
+func (k *Keyboard) addReplyButton(text string, isContact bool) *Keyboard {
 
 	k.enabled = true
 
@@ -133,7 +141,8 @@ func (k *Keyboard) AddReplyButton(text string) *Keyboard {
 			Keyboard: [][]tgbotapi.KeyboardButton{
 				{
 					{
-						Text: text,
+						Text:           text,
+						RequestContact: isContact,
 					},
 				},
 			},
