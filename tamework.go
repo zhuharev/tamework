@@ -60,16 +60,16 @@ func Markdown() MsgOp {
 }
 
 // Send sends message to id
-func (tw *Tamework) Send(text string, fns ...MsgOp) error {
+func (tw *Tamework) Send(text string, fns ...MsgOp) (int, error) {
 	kbmsg := tgbotapi.NewMessage(0, text)
 	for _, fn := range fns {
 		fn(&kbmsg)
 	}
-	_, err := tw.bot.Send(kbmsg)
+	resp, err := tw.bot.Send(kbmsg)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return resp.MessageID, nil
 }
 
 // Use registre middleware
