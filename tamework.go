@@ -80,7 +80,7 @@ func (tw *Tamework) Use(handler Handler) {
 
 // New returns Tamework instance
 func New(accessToken string) (_ *Tamework, err error) {
-	bot, err := tgbotapi.NewBotAPI(accessToken)
+	bot, err := tgbotapi.NewBotAPIWithClient(accessToken, &http.Client{Timeout: 10 * time.Second})
 	if err != nil {
 		return
 	}
