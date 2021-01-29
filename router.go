@@ -105,7 +105,11 @@ func (r *Router) State(state State, handler Handler) {
 func (r *Router) Form(text string, form *Form, handler FormHandler) {
 	r.formTable[text] = handler
 	r.registre(Message, text, func(ctx *Context) {
+		form := form.Copy()
 		question := form.GetNextQuestion()
+		if question == nil {
+			return
+		}
 		err := r.tamework.FormStore.SaveForm(ctx.Context, int(ctx.ChatID), int(ctx.UserID), form)
 		if err != nil {
 			ctx.Send("db error")

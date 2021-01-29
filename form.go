@@ -89,6 +89,15 @@ func NewForm(keyword string) *Form {
 	return &Form{Keyword: keyword}
 }
 
+// Copy make copy of form without answers
+func (f *Form) Copy() *Form {
+	return &Form{
+		Keyword:   f.Keyword,
+		Questions: f.Questions,
+		Answers:   nil,
+	}
+}
+
 func (f *Form) AddQuestion(q *Question) *Form {
 	f.Questions = append(f.Questions, q)
 	return f
