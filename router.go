@@ -102,8 +102,26 @@ func (r *Router) State(state State, handler Handler) {
 	r.stateTable[state] = handler
 }
 
-func (r *Router) Form(text string, handler FormHandler) {
+func (r *Router) Form(text string, form *Form, handler FormHandler) {
 	r.formTable[text] = handler
+	r.registre(Message, text, func(ctx *Context) {
+		question := form.GetNextQuestion()
+		err := r.tamework.FormStore.SaveForm(ctx.Context, int(ctx.ChatID), int(ctx.UserID), form)
+		if err != nil {
+			ctx.Send("db error")
+			return
+		}
+		// build buttons
+		kb := ctx.NewKeyboard(nil)
+		for _, v := range question.Answers {
+			kb.AddCallbackButton(v)
+		}
+		_, err = ctx.Markdown(question.Text)
+		if err != nil {
+			ctx.Send("network error")
+			return
+		}
+	})
 }
 
 func (r *Router) registre(method string, pattern string, fn Handler) {

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/rs/xid"
 )
 
 var (
@@ -95,18 +97,12 @@ func (f *Form) AddQuestion(q *Question) *Form {
 }
 
 // MakeHandler create form handler.
-//
-// If isInit is true. Handler just send first question and do not save current user input.
 func (f *Form) MakeHandler(store FormStore, handler FormHandler) Handler {
 	return func(ctx *Context) {
 		question := f.GetNextQuestion()
 
 		// save answer for last question
-		if !f.Answers.NoOneAnswered() && question != nil {
-			q := f.GetNextQuestion()
-			if q == nil {
-
-			}
+		if question != nil {
 			answer := Answer{
 				Answer:    ctx.Text,
 				Answered:  true,
@@ -135,10 +131,10 @@ func (f *Form) MakeHandler(store FormStore, handler FormHandler) Handler {
 
 		// build buttons
 		kb := ctx.NewKeyboard(nil)
-		for _, v := range question.answers {
+		for _, v := range question.Answers {
 			kb.AddCallbackButton(v)
 		}
-		_, err := ctx.Markdown(question.text)
+		_, err := ctx.Markdown(question.Text)
 		if err != nil {
 			ctx.Send("network error")
 			return
@@ -148,22 +144,24 @@ func (f *Form) MakeHandler(store FormStore, handler FormHandler) Handler {
 
 type Question struct {
 	ID             string
-	text           string
-	answers        []string
+	Text           string
+	Answers        []string
 	allowFreeInput bool
 }
 
 func NewQuestion(text string, answers []string) *Question {
 	return &Question{
-		text:    text,
-		answers: answers,
+		ID:      xid.New().String(),
+		Text:    text,
+		Answers: answers,
 	}
 }
 
 func NewQuestionWithFreeInput(text string, answers []string) *Question {
 	return &Question{
-		text:           text,
-		answers:        answers,
+		ID:             xid.New().String(),
+		Text:           text,
+		Answers:        answers,
 		allowFreeInput: true,
 	}
 }
@@ -218,11 +216,6 @@ func (a Answers) AllAnswered() (res bool) {
 		}
 	}
 	return true
-}
-
-// IsInit all answers is empty
-func (f *Form) IsInit() bool {
-	return f.Answers.NoOneAnswered()
 }
 
 // GetNextQuestion check answered questions and get next question with empty answer

@@ -8,5 +8,6 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/rs/xid v1.2.1
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 )
