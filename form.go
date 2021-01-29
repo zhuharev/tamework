@@ -80,15 +80,13 @@ func (s *memFormStore) DeleteForm(ctx context.Context, chatID, userID int) error
 
 type Form struct {
 	// Keyword is used in router for initial handler
-	Keyword           string
-	IsDone            bool
-	CurrentQuestionID string
-	Questions         []*Question
-	Answers           Answers
+	Keyword   string
+	Questions []*Question
+	Answers   Answers
 }
 
-func NewForm() *Form {
-	return &Form{}
+func NewForm(keyword string) *Form {
+	return &Form{Keyword: keyword}
 }
 
 func (f *Form) AddQuestion(q *Question) *Form {

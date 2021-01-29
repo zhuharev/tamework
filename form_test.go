@@ -3,7 +3,7 @@ package tamework
 import "testing"
 
 func TestFromBuilderExample(t *testing.T) {
-	_ = NewForm().
+	_ = NewForm("keyword").
 		AddQuestion(NewQuestion(
 			"How are you?",
 			[]string{"fine", "sad"}),
