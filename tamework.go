@@ -24,6 +24,7 @@ type Tamework struct {
 	WaitTimeout time.Duration
 	AutoTyping  bool
 	State       StateStorage
+	FormStore   FormStore
 
 	inject.Injector
 	handlers []Handler
@@ -52,6 +53,7 @@ func New(accessToken string, funcs ...initOpFunc) (_ *Tamework, err error) {
 		AutoTyping: true,
 		action:     func() {},
 		State:      newMemStateStorage(),
+		FormStore:  newMemFormStore(),
 	}
 	tw.Router = NewRouter(tw)
 
@@ -69,6 +71,14 @@ func New(accessToken string, funcs ...initOpFunc) (_ *Tamework, err error) {
 func WithStateStorage(stateStorage StateStorage) func(*Tamework) error {
 	return func(t *Tamework) error {
 		t.State = stateStorage
+		return nil
+	}
+}
+
+// WithFormStorage replace default memory state storage. can be used for persistent chat state.
+func WithFormStorage(formStorage FormStore) func(*Tamework) error {
+	return func(t *Tamework) error {
+		t.FormStore = formStorage
 		return nil
 	}
 }

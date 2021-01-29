@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-type State int
+type State string
 
 // StateStorage represent storage for chat state. It's useful for fill form.
 type StateStorage interface {

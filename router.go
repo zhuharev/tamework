@@ -32,6 +32,7 @@ var (
 type Router struct {
 	routeTable map[string]map[string]Handler
 	stateTable map[State]Handler
+	formTable  map[string]FormHandler
 	tamework   *Tamework
 
 	aliases map[string]string
@@ -43,6 +44,7 @@ func NewRouter(tamework *Tamework) *Router {
 		tamework:   tamework,
 		routeTable: make(map[string]map[string]Handler),
 		stateTable: make(map[State]Handler),
+		formTable:  make(map[string]FormHandler),
 		aliases:    make(map[string]string),
 	}
 }
@@ -100,6 +102,10 @@ func (r *Router) State(state State, handler Handler) {
 	r.stateTable[state] = handler
 }
 
+func (r *Router) Form(text string, handler FormHandler) {
+	r.formTable[text] = handler
+}
+
 func (r *Router) registre(method string, pattern string, fn Handler) {
 	if r.routeTable[method] == nil {
 		r.routeTable[method] = make(map[string]Handler)
@@ -143,10 +149,14 @@ func (r *Router) Handle(update tgbotapi.Update) {
 		}
 	}
 
-	if state, err := r.tamework.State.GetState(context.Background(), int(ctx.ChatID), int(ctx.UserID)); err == nil && state != 0 {
+	if state, err := r.tamework.State.GetState(context.Background(), int(ctx.ChatID), int(ctx.UserID)); err == nil && state != "" {
 		currHandler = r.stateTable[state]
 	} else if err != nil {
 		// TODO: handle storage error here
+	}
+
+	if form, err := r.tamework.FormStore.GetActiveForm(context.Background(), int(ctx.ChatID), int(ctx.UserID)); err == nil && form != nil {
+		currHandler = form.MakeHandler(r.tamework.FormStore, r.formTable[form.Keyword])
 	}
 
 	if currHandler == nil && r.tamework.NotFound != nil {

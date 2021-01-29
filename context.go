@@ -1,6 +1,7 @@
 package tamework
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-macaron/inject"
@@ -9,6 +10,7 @@ import (
 
 // Context will be created for all requests
 type Context struct {
+	context.Context
 	inject.Injector
 
 	index  int
@@ -22,6 +24,7 @@ type Context struct {
 	UserID int64
 	ChatID int64
 	Text   string
+	State  State
 
 	waiter *Waiter
 
@@ -50,6 +53,7 @@ func (c *Context) Exit() {
 // createContextjust create context
 func (tw *Tamework) createContext(update tgbotapi.Update) *Context {
 	c := &Context{
+		Context:  context.Background(),
 		Injector: inject.New(),
 		tamework: tw,
 		index:    0,
