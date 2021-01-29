@@ -1,6 +1,7 @@
 package tamework
 
 import (
+	"context"
 	"strings"
 
 	"github.com/fatih/color"
@@ -30,6 +31,7 @@ var (
 // Router route messages by text contents
 type Router struct {
 	routeTable map[string]map[string]Handler
+	stateTable map[State]Handler
 	tamework   *Tamework
 
 	aliases map[string]string
@@ -40,6 +42,7 @@ func NewRouter(tamework *Tamework) *Router {
 	return &Router{
 		tamework:   tamework,
 		routeTable: make(map[string]map[string]Handler),
+		stateTable: make(map[State]Handler),
 		aliases:    make(map[string]string),
 	}
 }
@@ -89,6 +92,14 @@ func (r *Router) Prefix(pattern string, handler Handler) {
 	r.registre(Prefix, pattern, handler)
 }
 
+// State registre handler in router. Router use tamework.StateStorage for define current
+// user status. If current user status == state, handler will be called.
+//
+// State handlers has low priority compared to Reply or Text handlers.
+func (r *Router) State(state State, handler Handler) {
+	r.stateTable[state] = handler
+}
+
 func (r *Router) registre(method string, pattern string, fn Handler) {
 	if r.routeTable[method] == nil {
 		r.routeTable[method] = make(map[string]Handler)
@@ -104,7 +115,6 @@ func (r *Router) registre(method string, pattern string, fn Handler) {
 
 // Handle is main router func which handle all updates
 func (r *Router) Handle(update tgbotapi.Update) {
-
 	var (
 		ctx         = r.tamework.createContext(update)
 		currHandler Handler
@@ -122,29 +132,27 @@ func (r *Router) Handle(update tgbotapi.Update) {
 	}
 
 	if currHandler == nil {
-		if m, has := r.routeTable[ctx.Method]; !has {
-			if r.tamework.NotFound != nil {
-				currHandler = r.tamework.NotFound
-			}
-			//ctx.Send(fmt.Sprintf("Команда %s (%s) не найдена", ctx.Text, ctx.Method))
-			//log.Println(ctx.update.Update)
-			//	return
-		} else {
+		if m, has := r.routeTable[ctx.Method]; has {
 			var txt = ctx.Text
 			if ctx.Method == InlineQuery {
 				txt = ""
 			}
-			if handler, has := m[txt]; !has {
-				//ctx.Send(fmt.Sprintf("Команда %s (%s) не найдена", ctx.Text, ctx.Method))
-				//log.Println(ctx.update.Update)
-				if r.tamework.NotFound != nil {
-					currHandler = r.tamework.NotFound
-				}
-			} else {
+			if handler, has := m[txt]; has {
 				currHandler = handler
 			}
 		}
 	}
+
+	if state, err := r.tamework.State.GetState(context.Background(), int(ctx.ChatID), int(ctx.UserID)); err == nil && state != 0 {
+		currHandler = r.stateTable[state]
+	} else if err != nil {
+		// TODO: handle storage error here
+	}
+
+	if currHandler == nil && r.tamework.NotFound != nil {
+		currHandler = r.tamework.NotFound
+	}
+
 	if currHandler != nil {
 		ctx.handlers = append(ctx.tamework.handlers, currHandler)
 	}

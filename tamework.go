@@ -23,6 +23,7 @@ type Tamework struct {
 	waiter      *Waiter
 	WaitTimeout time.Duration
 	AutoTyping  bool
+	State       StateStorage
 
 	inject.Injector
 	handlers []Handler
@@ -33,6 +34,43 @@ type Tamework struct {
 	RejectOldUpdates int //seconds
 
 	Locales []func(translationID string, args ...interface{}) string
+}
+
+type initOpFunc func(t *Tamework) error
+
+// New returns Tamework instance
+func New(accessToken string, funcs ...initOpFunc) (_ *Tamework, err error) {
+	bot, err := tgbotapi.NewBotAPIWithClient(accessToken, &http.Client{Timeout: 10 * time.Second})
+	if err != nil {
+		return
+	}
+
+	tw := &Tamework{
+		bot:        bot,
+		methods:    make(map[string]string),
+		waiter:     NewWaiter(DefaultWaitTimeout),
+		AutoTyping: true,
+		action:     func() {},
+		State:      newMemStateStorage(),
+	}
+	tw.Router = NewRouter(tw)
+
+	for _, fn := range funcs {
+		err = fn(tw)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return tw, nil
+}
+
+// WithStateStorage replace default memory state storage. can be used for persistent chat state.
+func WithStateStorage(stateStorage StateStorage) func(*Tamework) error {
+	return func(t *Tamework) error {
+		t.State = stateStorage
+		return nil
+	}
 }
 
 // MsgOp args func for flexible change message structure
@@ -76,24 +114,6 @@ func (tw *Tamework) Send(text string, fns ...MsgOp) (int, error) {
 // This func will be used in each request
 func (tw *Tamework) Use(handler Handler) {
 	tw.handlers = append(tw.handlers, handler)
-}
-
-// New returns Tamework instance
-func New(accessToken string) (_ *Tamework, err error) {
-	bot, err := tgbotapi.NewBotAPIWithClient(accessToken, &http.Client{Timeout: 10 * time.Second})
-	if err != nil {
-		return
-	}
-
-	tw := &Tamework{
-		bot:        bot,
-		methods:    make(map[string]string),
-		waiter:     NewWaiter(DefaultWaitTimeout),
-		AutoTyping: true,
-		action:     func() {},
-	}
-	tw.Router = NewRouter(tw)
-	return tw, nil
 }
 
 // Bot returns *tgbotapi.BotAPI
