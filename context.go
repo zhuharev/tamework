@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/go-macaron/inject"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 // Context will be created for all requests
@@ -155,7 +155,7 @@ func (c *Context) AnswerTo(to string, text string, alerts ...bool) error {
 
 	cfg := tgbotapi.NewCallback(to, text)
 	cfg.ShowAlert = alert
-	_, err := c.tamework.bot.AnswerCallbackQuery(cfg)
+	_, err := c.tamework.bot.Send(cfg)
 	return err
 }
 
@@ -175,7 +175,7 @@ func (c *Context) AnswerInline() error {
 		InlineQueryID: queryID,
 		Results:       []interface{}{art},
 	}
-	_, err := c.tamework.bot.AnswerInlineQuery(cfg)
+	_, err := c.tamework.bot.Send(cfg)
 	return err
 }
 
@@ -186,7 +186,7 @@ func (c *Context) SendPrecheckoutAnswer() error {
 		OK:                 true,
 		PreCheckoutQueryID: c.update.PreCheckoutQuery.ID,
 	}
-	_, err := c.tamework.bot.AnswerPreCheckoutQuery(pca)
+	_, err := c.tamework.bot.Send(pca)
 	return err
 }
 

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-macaron/inject"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var (
@@ -41,7 +41,7 @@ type initOpFunc func(t *Tamework) error
 
 // New returns Tamework instance
 func New(accessToken string, funcs ...initOpFunc) (_ *Tamework, err error) {
-	bot, err := tgbotapi.NewBotAPIWithClient(accessToken, &http.Client{Timeout: 10 * time.Second})
+	bot, err := tgbotapi.NewBotAPIWithClient(accessToken, tgbotapi.APIEndpoint, &http.Client{Timeout: 10 * time.Second})
 	if err != nil {
 		return
 	}
@@ -137,10 +137,7 @@ func (tw *Tamework) Run() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates, err := tw.bot.GetUpdatesChan(u)
-	if err != nil {
-		panic(err)
-	}
+	updates := tw.bot.GetUpdatesChan(u)
 
 	for update := range updates {
 		go tw.handleUpdate(update)
