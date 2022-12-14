@@ -103,7 +103,7 @@ func WithKeyboard(kb *Keyboard) MsgOp {
 // Markdown tell telegram servers parse message text as markdown
 func Markdown() MsgOp {
 	return func(m *tgbotapi.MessageConfig) {
-		m.ParseMode = tgbotapi.ModeMarkdown
+		m.ParseMode = tgbotapi.ModeMarkdownV2
 	}
 }
 

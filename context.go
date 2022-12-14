@@ -89,7 +89,7 @@ func (c *Context) HTML(html string) (msg tgbotapi.Message, err error) {
 
 // Markdown send markdown
 func (c *Context) Markdown(md string) (msg tgbotapi.Message, err error) {
-	return c.send(md, tgbotapi.ModeMarkdown)
+	return c.send(md, tgbotapi.ModeMarkdownV2)
 }
 
 // send is just helper
@@ -104,7 +104,7 @@ func (c *Context) SendTo(id int64, text string) (msg tgbotapi.Message, err error
 
 // MarkdownTo send message to specific chat
 func (c *Context) MarkdownTo(id int64, text string) (msg tgbotapi.Message, err error) {
-	return c.sendTo(id, text, tgbotapi.ModeMarkdown)
+	return c.sendTo(id, text, tgbotapi.ModeMarkdownV2)
 }
 
 // sendTo just helper
@@ -197,7 +197,7 @@ func (c *Context) EditText(newMessage string) error {
 
 // EditMarkdown edit text for message from context.Update
 func (c *Context) EditMarkdown(newMessage string) error {
-	return c.newEdit(newMessage, tgbotapi.ModeMarkdown)
+	return c.newEdit(newMessage, tgbotapi.ModeMarkdownV2)
 }
 
 // newEdit just helper
