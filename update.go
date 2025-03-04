@@ -32,7 +32,7 @@ func (u Update) Type() UpdateType {
 		return UpdateTypeMessage
 	}
 	if u.Update.EditedMessage != nil {
-		return UpdateTypeMessage
+		return UpdateTypeEditedMessage
 	}
 	if u.Update.ChannelPost != nil {
 		return UpdateTypeChannelPost
@@ -78,6 +78,8 @@ func (u Update) ChatID() int64 {
 		return int64(u.ShippingQuery.From.ID)
 	} else if u.PreCheckoutQuery != nil {
 		return int64(u.PreCheckoutQuery.From.ID)
+	} else if u.EditedMessage != nil {
+		return u.EditedMessage.Chat.ID
 	}
 	return 0
 
@@ -95,13 +97,15 @@ func (u Update) UserID() int64 {
 		return int64(u.PreCheckoutQuery.From.ID)
 	} else if u.InlineQuery != nil {
 		return int64(u.InlineQuery.From.ID)
+	} else if u.EditedMessage != nil {
+		return int64(u.EditedMessage.From.ID)
 	}
 	return 0
 
 }
 
 // Method detects update type and return it
-func (u Update) Method() string {
+func (u Update) Method() Method {
 	if u.Message != nil {
 		if u.Message.ReplyToMessage != nil {
 			return Reply
@@ -119,6 +123,8 @@ func (u Update) Method() string {
 		return PreCheckoutQuery
 	} else if u.InlineQuery != nil {
 		return InlineQuery
+	} else if u.EditedMessage != nil {
+		return EditedMessage
 	}
 
 	return ""
@@ -137,6 +143,8 @@ func (u Update) Text() string {
 		return ""
 	} else if u.InlineQuery != nil {
 		return u.InlineQuery.Query
+	} else if u.EditedMessage != nil {
+		return u.EditedMessage.Text
 	}
 	return ""
 }
@@ -151,6 +159,8 @@ func (u Update) Username() (res string) {
 		res = u.ShippingQuery.From.UserName
 	} else if u.PreCheckoutQuery != nil {
 		res = u.PreCheckoutQuery.From.UserName
+	} else if u.EditedMessage != nil {
+		res = u.EditedMessage.From.UserName
 	}
 
 	if res == "" {
@@ -170,6 +180,8 @@ func (u Update) FirstName() string {
 		return u.ShippingQuery.From.FirstName
 	} else if u.PreCheckoutQuery != nil {
 		return u.PreCheckoutQuery.From.FirstName
+	} else if u.EditedMessage != nil {
+		return u.EditedMessage.From.FirstName
 	}
 	return ""
 }
@@ -184,6 +196,8 @@ func (u Update) LastName() string {
 		return u.ShippingQuery.From.LastName
 	} else if u.PreCheckoutQuery != nil {
 		return u.PreCheckoutQuery.From.LastName
+	} else if u.EditedMessage != nil {
+		return u.EditedMessage.From.LastName
 	}
 	return ""
 }

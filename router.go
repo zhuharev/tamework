@@ -8,32 +8,37 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+type Method string
+
 var (
 	// Message normal message update
-	Message = "message"
+	Message Method = "message"
+	// EditedMessage edited message update
+	EditedMessage Method = "edited_message"
 	// CallbackQuery cbquery update
-	CallbackQuery = "callback_query"
+	CallbackQuery Method = "callback_query"
 	// Reply reply to message update
-	Reply = "reply"
+	Reply Method = "reply"
 	// ShippingQuery update
-	ShippingQuery = "shipping_query"
+	ShippingQuery Method = "shipping_query"
 	// PreCheckoutQuery update
-	PreCheckoutQuery = "pre_checkout_query"
+	PreCheckoutQuery Method = "pre_checkout_query"
 	// Photo update
-	Photo = "photo"
+	Photo Method = "photo"
 	// InlineQuery update
-	InlineQuery = "inline_query"
+	InlineQuery Method = "inline_query"
 
 	// Prefix update
-	Prefix = "prefix"
+	Prefix Method = "prefix"
 )
 
 // Router route messages by text contents
 type Router struct {
-	routeTable map[string]map[string]Handler
-	stateTable map[State]Handler
-	formTable  map[string]FormHandler
-	tamework   *Tamework
+	routeTable           map[Method]map[string]Handler
+	stateTable           map[State]Handler
+	formTable            map[string]FormHandler
+	tamework             *Tamework
+	editedMessageHandler Handler
 
 	aliases map[string]string
 }
@@ -42,7 +47,7 @@ type Router struct {
 func NewRouter(tamework *Tamework) *Router {
 	return &Router{
 		tamework:   tamework,
-		routeTable: make(map[string]map[string]Handler),
+		routeTable: make(map[Method]map[string]Handler),
 		stateTable: make(map[State]Handler),
 		formTable:  make(map[string]FormHandler),
 		aliases:    make(map[string]string),
@@ -102,6 +107,10 @@ func (r *Router) State(state State, handler Handler) {
 	r.stateTable[state] = handler
 }
 
+func (r *Router) EditedMessage(handler Handler) {
+	r.editedMessageHandler = handler
+}
+
 func (r *Router) Form(text string, form *Form, handler FormHandler) {
 	r.formTable[text] = handler
 	r.registre(Message, text, func(ctx *Context) {
@@ -128,7 +137,7 @@ func (r *Router) Form(text string, form *Form, handler FormHandler) {
 	})
 }
 
-func (r *Router) registre(method string, pattern string, fn Handler) {
+func (r *Router) registre(method Method, pattern string, fn Handler) {
 	if r.routeTable[method] == nil {
 		r.routeTable[method] = make(map[string]Handler)
 	}
@@ -181,6 +190,10 @@ func (r *Router) Handle(update tgbotapi.Update) {
 		currHandler = form.MakeHandler(r.tamework.FormStore, r.formTable[form.Keyword])
 	}
 
+	if ctx.Method == EditedMessage {
+		currHandler = r.editedMessageHandler
+	}
+
 	if currHandler == nil && r.tamework.NotFound != nil {
 		currHandler = r.tamework.NotFound
 	}
@@ -188,5 +201,6 @@ func (r *Router) Handle(update tgbotapi.Update) {
 	if currHandler != nil {
 		ctx.handlers = append(ctx.tamework.handlers, currHandler)
 	}
+
 	ctx.run()
 }

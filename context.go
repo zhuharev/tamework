@@ -19,7 +19,7 @@ type Context struct {
 	handlers []Handler
 	action   Handler
 
-	Method string
+	Method Method
 
 	UserID int64
 	ChatID int64
